@@ -37,6 +37,7 @@ class Builder:
         box_size=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         incr_per=0.4,
         BondInfo=True,
+        IrrStruc=False
     ):
         self.Dataframe = Dataframe
         self.ID_col = ID_col
@@ -60,6 +61,7 @@ class Builder:
         self.box_size = box_size
         self.incr_per = incr_per
         self.BondInfo = BondInfo
+        self.IrrStruc = IrrStruc
 
     def Build(self):
         start_1 = time.time()
@@ -107,14 +109,15 @@ class Builder:
                 df,
                 ID_col=self.ID_col,
                 SMILES_col=self.SMILES_col,
-                LeftCap=self.LeftCap[0],
-                RightCap=self.RightCap[0],
+                LeftCap=self.LeftCap,
+                RightCap=self.RightCap,
                 OutDir=self.OutDir_xyz,
                 Length=[int(df[self.Length].values)],
                 NumConf=int(df[self.NumConf].values) * self.NumModel,
                 Loop=eval(str(df[self.Loop].values[0])),
                 NCores=-1,
                 Subscript=True,
+                IrrStruc=self.IrrStruc,
             )
             results = mol.Build()
             xyz_gen_pd = pd.concat([xyz_gen_pd, results])

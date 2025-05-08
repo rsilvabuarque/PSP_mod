@@ -2223,11 +2223,10 @@ def build_3D(
 
     else:
         smiles_RCap_ = ''
-
+    
     # Get SMILES
     smiles_each = df_smiles[df_smiles[ID] == unit_name][SMILES].values[0]
     # smiles_each_copy = copy.copy(smiles_each)
-
     # count = 0
     Final_SMILES = []
     for ln in Length:
@@ -2287,7 +2286,6 @@ def build_3D(
                 unit_dis,
                 flag,
             ) = Init_info(unit_name, smiles_each, xyz_in_dir, Length)
-
             if flag == 'REJECT' and len(Final_SMILES) == 0 and ln == Length[-1]:
                 return unit_name, 'REJECT', Final_SMILES
             elif flag == 'REJECT' and len(Final_SMILES) >= 1 and ln == Length[-1]:
