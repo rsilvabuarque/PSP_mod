@@ -18,6 +18,7 @@ from LigParGenPSP.BOSSReader import bossElement2Mass, tor_cent
 import pickle
 import pandas as pd
 import numpy as np
+import os
 
 
 def Boss2LammpsLMP(resid, num2typ2symb, Qs, bnd_df, ang_df, tor_df, molecule_data):
@@ -128,7 +129,8 @@ def Boss2CharmmTorsion(bnd_df, num2opls, st_no, molecule_data, num2typ2symb):
         dt = [line.split()[0], line.split()[4], line.split()[6], line.split()[8]]
         dt = [int(d) for d in dt]
         ats.append(dt)
-    for line in molecule_data.MolData["ADD_DIHED"]:
+    # include any additional dihedrals if present under correct key
+    for line in molecule_data.MolData.get("ADD_DIHED", []):
         dt = [int(i) for i in line]
         ats.append(dt)
     assert len(ats) == len(
@@ -187,7 +189,7 @@ def boss2CharmmBond(molecule_data, st_no):
     bnd_df["UR"] = (
         (bnd_df.cl1 + bnd_df.cl2) * (bnd_df.cl1 + bnd_df.cl2 + 1) * 0.5
     ) + bnd_df.cl1
-    hb_df = bnd_df.drop(["cl1", "cl2", "UF", "UR"], 1)
+    hb_df = bnd_df.drop(["cl1", "cl2", "UF", "UR"], axis=1)
     hb_df = hb_df.drop_duplicates()
     return bnd_df
 
@@ -239,7 +241,17 @@ def Boss2Lammps(resid, molecule_data):
     return None
 
 
-def mainBOSS2LAMMPS(resid, clu=False):
+def mainBOSS2LAMMPS(resid, clu=False, outdir='.'):
+    """
+    Main entry point for BOSS to LAMMPS conversion.
+    resid: base name of pickle and output files.
+    clu: unused cluster flag.
+    outdir: directory where resid.p is located and where outputs should be written.
+    """
+    # Change working directory to outdir for input/output files
+    os.chdir(outdir)
+    # Load the pickled molecule data
     mol = pickle.load(open(resid + ".p", "rb"))
+    # Generate LAMMPS files in this directory
     Boss2Lammps(resid, mol)
     return None

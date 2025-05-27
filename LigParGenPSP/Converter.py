@@ -120,6 +120,7 @@ def convert(**kwargs):
         'mol': None,
         'resname': 'UNK',
         'pdb': None,
+        'outdir': '.',  # default output directory for running BOSS2LAMMPS
     }
 
     # update the default values based on the arguments
@@ -173,11 +174,12 @@ def convert(**kwargs):
         if not os.path.exists(os.path.join(outdir, pdb)):
             os.system('cp %s %s' % (pdb, outdir))
         os.chdir(outdir)
-        # Convert pdb to mol using Obabelv3
-        mole = ob.OBMol()
-        obConversion.ReadFile(mole, pdb)
-        mol = pdb.replace('pdb', 'mol')
-        obConversion.WriteFile(mole, mol)
+        # Convert pdb to mol using obabel CLI for compatibility with OpenBabel v3
+        mol = pdb.replace('.pdb', '.mol')
+        cmd = f"obabel -ipdb {pdb} -omol -O {mol}"
+        ret = os.system(cmd)
+        if ret != 0:
+            raise RuntimeError(f"OpenBabel CLI conversion failed: {cmd}")
         GenMolRep(mol, optim, resname, charge)
         mol = BOSSReader('%s.z' % resname, '%s' % outdir, optim, charge, lbcc)
         clu = True
@@ -189,7 +191,7 @@ def convert(**kwargs):
     ), "Hydrogens are not added. Please add Hydrogens"
 
     pickle.dump(mol, open(resname + ".p", "wb"))
-    mainBOSS2LAMMPS(resname, clu)
+    mainBOSS2LAMMPS(resname, clu, outdir)
     print('DONE WITH LAMMPS')
 
     # Cleanup

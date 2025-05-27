@@ -312,22 +312,23 @@ class Builder:
             _num = row[self.NumMole]
             _conf = 1  # read in only the first conformer
             output_prefix = "{}_N{}_C{}".format(_id, _length, _conf)
-            lig_output_fname = "{}.lmp".format(output_prefix)
+            # define input/output names
+            lig_output_fname = f"{output_prefix}.lmp"
             data_fname = os.path.join(self.OutDir_ligpargen, lig_output_fname)
 
-            try:
-                print("LigParGen working on {}.pdb".format(output_prefix))
-                Converter.convert(
-                    pdb=os.path.join(self.OutDir_xyz, output_prefix + '.pdb'),
-                    resname=output_prefix,
-                    charge=0,
-                    opt=0,
-                    lbcc=lbcc_charges,
-                    outdir='.',
-                )
-                os.rename(lig_output_fname, data_fname)
-            except BaseException:
-                print('problem running LigParGen for {}.pdb.'.format(output_prefix))
+            print(f"LigParGen working on {output_prefix}.pdb")
+            # generate LAMMPS via LigParGen in ligpargen folder
+            Converter.convert(
+                pdb=os.path.join(self.OutDir_xyz, output_prefix + '.pdb'),
+                resname=output_prefix,
+                charge=0,
+                opt=0,
+                lbcc=lbcc_charges,
+                outdir=self.OutDir_ligpargen,
+            )
+            # ensure output exists
+            if not os.path.isfile(data_fname):
+                raise FileNotFoundError(f"Expected LAMMPS file not found: {data_fname}")
 
             # quickly read the headers of LigParGen generated LAMMPS
             # files to count total number of atoms/bonds/angles...etc
