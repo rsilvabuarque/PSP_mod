@@ -284,7 +284,7 @@ class Builder:
             pd.DataFrame(), "Amorphous model", np.round((end_1 - start_1) / 60, 2)
         )
 
-    def get_opls(self, output_fname='amor_opls.lmps', lbcc_charges=True):
+    def get_opls(self, output_fname='amor_opls.lmps', lbcc_charges=True, include_impropers=False):
         print("\nGenerating OPLS parameter file ...\n")
         system_pdb_fname = os.path.join(self.OutDir_packmol, "packmol.pdb")
         r = MDlib.get_coord_from_pdb(system_pdb_fname)
@@ -349,12 +349,14 @@ class Builder:
             system_stats['total_bond_types'] += nbond_types
             system_stats['total_angle_types'] += nangle_types
             system_stats['total_dihedral_types'] += ndihedral_types
-            system_stats['total_improper_types'] += nimproper_types
+            if include_impropers:
+                system_stats['total_improper_types'] += nimproper_types
             system_stats['total_atoms'] += natoms * _num
             system_stats['total_bonds'] += nbonds * _num
             system_stats['total_angles'] += nangles * _num
             system_stats['total_dihedrals'] += ndihedrals * _num
-            system_stats['total_impropers'] += nimpropers * _num
+            if include_impropers:
+                system_stats['total_impropers'] += nimpropers * _num
 
             # this switcher dict is to navigate through and store info for each section of a LAMMPS file
             switcher = {
@@ -378,6 +380,8 @@ class Builder:
                 for line in lines:
                     if any(x in line for x in switcher.keys()):
                         current_section = line.strip()
+                        if (not include_impropers) and current_section in ('Improper Coeffs', 'Impropers'):
+                            current_section = None
                     elif line == '\n' or not current_section:
                         continue
                     else:
@@ -531,3 +535,4 @@ class Builder:
         lammps_output = os.path.join(self.OutDir, output_fname)
         MDlib.write_lammps_ouput(lammps_output, r, self.box_size, system_stats, dicts)
         print("\nGAFF2 parameter file generated.")
+
